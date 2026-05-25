@@ -13,7 +13,7 @@ from typing import Optional
 # ============================================================
 # 配置（从环境变量读取，由 GitHub Secrets 注入）
 # ============================================================
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-26d9c364962742809698b89ea80e897f")
 SERVERCHAN_KEY = os.environ.get("SERVERCHAN_KEY", "SCT349874TVE0djy2pbyv3urWRUvhpIx0h")
 QQ_MAIL_ADDR = os.environ.get("QQ_MAIL_ADDR", "2323624967@qq.com")
 QQ_MAIL_AUTH_CODE = os.environ.get("QQ_MAIL_AUTH_CODE", "")  # SMTP 授权码
