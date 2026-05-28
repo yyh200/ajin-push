@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
     push_report, call_deepseek, today_str,
     get_market_indices, get_all_holdings_nav, get_gold_prices,
+    get_finance_news, fmt_news,
     fmt_pct, fmt_price,
 )
 
@@ -32,7 +33,7 @@ SYSTEM_PROMPT = """你是阿金🪙，大哥的分析助手，风格清亮务实
 7. 注意中长期持有视角：短期波动不等于卖出信号"""
 
 
-def build_evening_prompt(indices: dict, holdings_nav: list, gold_data: dict) -> str:
+def build_evening_prompt(indices: dict, holdings_nav: list, gold_data: dict, news_list: list) -> str:
     """构建晚报 prompt"""
     index_lines = []
     for code, q in indices.items():
@@ -50,7 +51,12 @@ def build_evening_prompt(indices: dict, holdings_nav: list, gold_data: dict) -> 
     for k, v in gold_data.items():
         gold_lines.append(f"- {v['name']}: {fmt_price(v.get('price'))} ({fmt_pct(v.get('change_pct'))})")
 
+    news_text = fmt_news(news_list)
+
     prompt = f"""今天是 {today_str()}，请生成收盘晚报+持仓复盘。
+
+## 今日财经要闻
+{news_text}
 
 ## 收盘数据
 
@@ -93,17 +99,20 @@ def build_evening_prompt(indices: dict, holdings_nav: list, gold_data: dict) -> 
 def main():
     print(f"[{today_str()}] 阿金晚报生成中...")
 
-    print("[1/4] 获取收盘数据...")
+    print("[1/5] 获取收盘数据...")
     indices = get_market_indices()
 
-    print("[2/4] 获取持仓数据...")
+    print("[2/5] 获取持仓数据...")
     holdings_nav = get_all_holdings_nav()
 
-    print("[3/4] 获取黄金价格...")
+    print("[3/5] 获取黄金价格...")
     gold_data = get_gold_prices()
 
-    print("[4/4] 调用 DeepSeek 生成晚报...")
-    prompt = build_evening_prompt(indices, holdings_nav, gold_data)
+    print("[4/5] 获取财经新闻...")
+    news_list = get_finance_news(max_items=10)
+
+    print("[5/5] 调用 DeepSeek 生成晚报...")
+    prompt = build_evening_prompt(indices, holdings_nav, gold_data, news_list)
     report = call_deepseek(prompt, system_prompt=SYSTEM_PROMPT)
 
     if not report:
