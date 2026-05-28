@@ -86,37 +86,60 @@ def push_to_email(subject: str, content: str) -> bool:
 # ============================================================
 # 数据获取 · 财经新闻（新浪财经）
 # ============================================================
-def get_finance_news(max_items: int = 10) -> list:
+def get_finance_news(max_items: int = 12) -> list:
     """
     获取当天财经新闻列表
-    来源：新浪财经快讯 + 宏观经济
-    返回: [{"title": "...", "time": "..."}, ...]
+    来源：华尔街见闻(快讯+热门) + 新浪财经 + 新浪公告
+    返回: [{"title": "...", "time": "...", "source": "..."}, ...]
     """
     seen = set()
     news = []
-    headers = {"User-Agent": "Mozilla/5.0"}
+    UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
-    # 来源1：国内财经
-    sources = [
-        ("https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&knum=10", "国内财经"),
-        ("https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2509&knum=10", "宏观经济"),
-    ]
+    # 来源1：华尔街见闻 — 快讯（主力）
+    try:
+        url = "https://api-one.wallstcn.com/apiv1/content/lives?channel=global-channel&limit=15"
+        resp = requests.get(url, headers={**UA, "Referer": "https://wallstreetcn.com/"}, timeout=8)
+        data = resp.json()
+        for item in data.get("data", {}).get("items", []):
+            title = item.get("title", "") or item.get("content_text", "")[:100]
+            ctime = item.get("display_time", "")
+            if title and title not in seen:
+                seen.add(title)
+                news.append({"title": title.strip(), "time": ctime, "source": "华尔街见闻"})
+    except Exception as e:
+        print(f"[NEWS] 华尔街见闻快讯获取失败: {e}")
 
-    for url, source_name in sources:
-        try:
-            resp = requests.get(url, headers=headers, timeout=8)
-            data = resp.json()
-            for item in data.get("result", {}).get("data", []):
-                title = item.get("title", "").strip()
-                ctime = item.get("ctime", "")
-                if title and title not in seen:
-                    seen.add(title)
-                    news.append({"title": title, "time": ctime, "source": source_name})
-        except Exception as e:
-            print(f"[NEWS] {source_name} 获取失败: {e}")
+    # 来源2：华尔街见闻 — 热门深度
+    try:
+        url = "https://api-one.wallstcn.com/apiv1/content/articles/hot?period=all&limit=8"
+        resp = requests.get(url, headers={**UA, "Referer": "https://wallstreetcn.com/"}, timeout=8)
+        data = resp.json()
+        for item in data.get("data", {}).get("day_items", []):
+            title = item.get("title", "")
+            ctime = item.get("display_time", "")
+            if title and title not in seen:
+                seen.add(title)
+                news.append({"title": title.strip(), "time": ctime, "source": "华尔街见闻"})
+    except Exception as e:
+        print(f"[NEWS] 华尔街见闻深度获取失败: {e}")
 
-    # 去重后按时间排序（ctime是unix时间戳）
-    news.sort(key=lambda x: x.get("time", 0), reverse=True)
+    # 来源3：新浪财经快讯（补充）
+    try:
+        url = "https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&knum=8"
+        resp = requests.get(url, headers=UA, timeout=8)
+        data = resp.json()
+        for item in data.get("result", {}).get("data", []):
+            title = item.get("title", "").strip()
+            ctime = item.get("ctime", "")
+            if title and title not in seen:
+                seen.add(title)
+                news.append({"title": title, "time": ctime, "source": "新浪财经"})
+    except Exception as e:
+        print(f"[NEWS] 新浪财经获取失败: {e}")
+
+    # 去重后按时间排序
+    news.sort(key=lambda x: str(x.get("time", 0)), reverse=True)
     return news[:max_items]
 
 
@@ -138,6 +161,32 @@ def push_report(title: str, content: str) -> dict:
     wechat_ok = push_to_wechat(title, content)
     email_ok = push_to_email(title, content)
     return {"wechat": wechat_ok, "email": email_ok}
+
+
+# ============================================================
+# 自循环触发 · 解决GitHub Actions调度延迟
+# 每次推送成功后触发下一次，形成链条
+# ============================================================
+GITHUB_TOKEN = os.environ.get("GH_TOKEN", "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")
+
+def trigger_workflow(workflow_name: str) -> bool:
+    """通过 GitHub API 触发指定 workflow 的 workflow_dispatch"""
+    url = f"https://api.github.com/repos/yyh200/ajin-push/actions/workflows/{workflow_name}/dispatches"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+    }
+    try:
+        resp = requests.post(url, headers=headers, json={"ref": "main"}, timeout=10)
+        if resp.status_code == 204:
+            print(f"[TRIGGER] ✅ 触发 {workflow_name} 成功")
+            return True
+        else:
+            print(f"[TRIGGER] ❌ 触发 {workflow_name} 失败: {resp.status_code}")
+            return False
+    except Exception as e:
+        print(f"[TRIGGER] 异常: {e}")
+        return False
 
 
 # ============================================================
