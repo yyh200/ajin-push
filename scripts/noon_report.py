@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
     push_report, call_deepseek, today_str,
     get_market_indices, get_all_holdings_nav, get_gold_prices,
+    get_finance_news, fmt_news,
     fmt_pct, fmt_price, HOLDINGS,
 )
 
@@ -29,7 +30,7 @@ SYSTEM_PROMPT = """你是阿金🪙，大哥的分析助手，风格清亮务实
 5. 注意：东方人工智能实际持仓是半导体设备，不是AI"""
 
 
-def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict) -> str:
+def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict, news_list: list) -> str:
     """构建午间分析 prompt"""
     # 大盘
     index_lines = []
@@ -50,7 +51,12 @@ def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict) -> str
     for k, v in gold_data.items():
         gold_lines.append(f"- {v['name']}: {fmt_price(v.get('price'))} ({fmt_pct(v.get('change_pct'))})")
 
+    news_text = fmt_news(news_list)
+
     prompt = f"""今天是 {today_str()}，请生成午间持仓分析。
+
+## 今日财经要闻
+{news_text}
 
 ## 上午盘面数据
 
@@ -87,17 +93,20 @@ def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict) -> str
 def main():
     print(f"[{today_str()}] 阿金午间分析生成中...")
 
-    print("[1/4] 获取大盘指数...")
+    print("[1/5] 获取大盘指数...")
     indices = get_market_indices()
 
-    print("[2/4] 获取持仓净值...")
+    print("[2/5] 获取持仓净值...")
     holdings_nav = get_all_holdings_nav()
 
-    print("[3/4] 获取黄金价格...")
+    print("[3/5] 获取黄金价格...")
     gold_data = get_gold_prices()
 
-    print("[4/4] 调用 DeepSeek 生成午间分析...")
-    prompt = build_noon_prompt(indices, holdings_nav, gold_data)
+    print("[4/5] 获取财经新闻...")
+    news_list = get_finance_news(max_items=10)
+
+    print("[5/5] 调用 DeepSeek 生成午间分析...")
+    prompt = build_noon_prompt(indices, holdings_nav, gold_data, news_list)
     report = call_deepseek(prompt, system_prompt=SYSTEM_PROMPT)
 
     if not report:
