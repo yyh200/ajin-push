@@ -7,7 +7,8 @@
 import os
 import json
 import requests
-from datetime import datetime
+import re
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 # ============================================================
@@ -80,6 +81,53 @@ def push_to_email(subject: str, content: str) -> bool:
     except Exception as e:
         print(f"[EMAIL] 邮件推送异常: {e}")
         return False
+
+
+# ============================================================
+# 数据获取 · 财经新闻（新浪财经）
+# ============================================================
+def get_finance_news(max_items: int = 10) -> list:
+    """
+    获取当天财经新闻列表
+    来源：新浪财经快讯 + 宏观经济
+    返回: [{"title": "...", "time": "..."}, ...]
+    """
+    seen = set()
+    news = []
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    # 来源1：国内财经
+    sources = [
+        ("https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&knum=10", "国内财经"),
+        ("https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2509&knum=10", "宏观经济"),
+    ]
+
+    for url, source_name in sources:
+        try:
+            resp = requests.get(url, headers=headers, timeout=8)
+            data = resp.json()
+            for item in data.get("result", {}).get("data", []):
+                title = item.get("title", "").strip()
+                ctime = item.get("ctime", "")
+                if title and title not in seen:
+                    seen.add(title)
+                    news.append({"title": title, "time": ctime, "source": source_name})
+        except Exception as e:
+            print(f"[NEWS] {source_name} 获取失败: {e}")
+
+    # 去重后按时间排序（ctime是unix时间戳）
+    news.sort(key=lambda x: x.get("time", 0), reverse=True)
+    return news[:max_items]
+
+
+def fmt_news(news_list: list) -> str:
+    """格式化新闻列表为文本"""
+    if not news_list:
+        return "（暂无财经新闻数据）"
+    lines = []
+    for i, n in enumerate(news_list, 1):
+        lines.append(f"{i}. {n['title']}")
+    return "\n".join(lines)
 
 
 # ============================================================
@@ -336,12 +384,14 @@ def get_gold_prices() -> dict:
         resp = requests.get(url, headers=headers, timeout=10)
         resp.encoding = "gbk"
         if "hq_str_au9999" in resp.text:
-            data = resp.text.split("\"")[1].split(",")
-            result["shgold"] = {
-                "name": "上海金AU99.99",
-                "price": float(data[1]) if data[1] else 0,
-                "change_pct": float(data[3]) if len(data) > 3 and data[3] else 0,
-            }
+            raw = resp.text.split("\"")[1]
+            if raw:  # 非空时才解析
+                data = raw.split(",")
+                result["shgold"] = {
+                    "name": "上海金AU99.99",
+                    "price": float(data[1]) if len(data) > 1 and data[1] else 0,
+                    "change_pct": float(data[3]) if len(data) > 3 and data[3] else 0,
+                }
     except Exception as e:
         print(f"[GOLD] 上海金获取失败: {e}")
 
