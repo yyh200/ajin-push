@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
     push_report, call_deepseek, today_str,
     get_us_markets, get_gold_prices, get_dxy,
-    get_finance_news, fmt_news,
+    get_finance_news, fmt_news, trigger_workflow,
     fmt_pct, fmt_price,
 )
 
@@ -120,6 +120,9 @@ def main():
 
     if success:
         print(f"[✓] 早报推送成功 (微信:{result['wechat']} 邮箱:{result.get('email', False)})")
+        # 自循环：触发午间分析
+        print("[5/5] 触发午间分析(自循环)...")
+        trigger_workflow("noon_report.yml")
     else:
         print("[✗] 早报微信推送失败")
         sys.exit(1)
