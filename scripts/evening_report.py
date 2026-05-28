@@ -143,12 +143,12 @@ def main():
 
     if success:
         print(f"[✓] 晚报推送成功 (微信:{result['wechat']} 邮箱:{result.get('email', False)})")
-        # 自循环：触发明天的早报
-        print("[5/5] 触发明日早报(自循环)...")
-        trigger_workflow("morning_report.yml")
     else:
-        print("[✗] 晚报微信推送失败")
-        sys.exit(1)
+        print("[⚠️] 晚报微信推送失败，继续触发下游")
+
+    # 无论推送成功与否，都触发自循环（触发明天早报）
+    print("[+] 触发明日早报(自循环)...")
+    trigger_workflow("morning_report.yml")
 
 
 if __name__ == "__main__":
