@@ -131,12 +131,12 @@ def main():
 
     if success:
         print(f"[✓] 早报推送成功 (微信:{result['wechat']} 邮箱:{result.get('email', False)})")
-        # 自循环：触发午间分析
-        print("[5/5] 触发午间分析(自循环)...")
-        trigger_workflow("noon_report.yml")
     else:
-        print("[✗] 早报微信推送失败")
-        sys.exit(1)
+        print("[⚠️] 早报微信推送失败，继续触发下游")
+
+    # 无论推送成功与否，都触发自循环（确保链条不断）
+    print("[+] 触发午间分析(自循环)...")
+    trigger_workflow("noon_report.yml")
 
 
 if __name__ == "__main__":
