@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
     push_report, call_deepseek, today_str,
     get_us_markets, get_gold_prices, get_dxy,
+    get_finance_news, fmt_news,
     fmt_pct, fmt_price,
 )
 
@@ -30,7 +31,7 @@ SYSTEM_PROMPT = """你是阿金🪙，一个专业的投资分析助手，风格
 6. 格式用 Markdown，适合手机阅读"""
 
 
-def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float) -> str:
+def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: list) -> str:
     """构建早报 prompt"""
     us_lines = []
     for name, q in us_data.items():
@@ -40,7 +41,12 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float) -> str:
     for k, v in gold_data.items():
         gold_lines.append(f"- {v['name']}: {fmt_price(v.get('price'))} ({fmt_pct(v.get('change_pct'))})")
 
+    news_text = fmt_news(news_list)
+
     prompt = f"""今天是 {today_str()}，请生成今日早报。
+
+## 今日财经要闻
+{news_text}
 
 ## 隔夜市场数据
 
@@ -76,18 +82,21 @@ def main():
     print(f"[{today_str()}] 阿金早报生成中...")
 
     # 1. 拉数据
-    print("[1/4] 获取美股行情...")
+    print("[1/5] 获取美股行情...")
     us_data = get_us_markets()
 
-    print("[2/4] 获取黄金价格...")
+    print("[2/5] 获取黄金价格...")
     gold_data = get_gold_prices()
 
-    print("[3/4] 获取美元指数...")
+    print("[3/5] 获取美元指数...")
     dxy = get_dxy()
 
+    print("[4/5] 获取财经新闻...")
+    news_list = get_finance_news(max_items=10)
+
     # 2. 构建 prompt 调用 DeepSeek
-    print("[4/4] 调用 DeepSeek 生成早报...")
-    prompt = build_morning_prompt(us_data, gold_data, dxy)
+    print("[5/5] 调用 DeepSeek 生成早报...")
+    prompt = build_morning_prompt(us_data, gold_data, dxy, news_list)
     report = call_deepseek(prompt, system_prompt=SYSTEM_PROMPT)
 
     if not report:
