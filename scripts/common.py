@@ -526,6 +526,12 @@ def today_str():
     return datetime.now().strftime("%Y-%m-%d")
 
 
+def bjt_hour() -> int:
+    """获取当前北京时间的小时（用于时间窗口判断）"""
+    BJT = timezone(timedelta(hours=8))
+    return datetime.now(BJT).hour
+
+
 if __name__ == "__main__":
     # 测试
     print("=" * 50)
