@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (
-    push_report, call_deepseek, today_str,
+    push_report, call_deepseek, today_str, bjt_hour,
     get_us_markets, get_gold_prices, get_dxy,
     get_finance_news, fmt_news, trigger_workflow,
     fmt_pct, fmt_price,
@@ -90,6 +90,12 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 
 
 def main():
+    # ⏰ 时间窗口检查：只在 7:00-10:00（早盘前）生成早报
+    hour = bjt_hour()
+    if not (7 <= hour <= 10):
+        print(f"[SKIP] 当前 BJT {hour}:00，不在早报时段（7-10点），跳过")
+        return
+
     print(f"[{today_str()}] 阿金早报生成中...")
 
     # 1. 拉数据
@@ -137,6 +143,10 @@ def main():
     # 无论推送成功与否，都触发自循环（确保链条不断）
     print("[+] 触发午间分析(自循环)...")
     trigger_workflow("noon_report.yml")
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
