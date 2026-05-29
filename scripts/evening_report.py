@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (
-    push_report, call_deepseek, today_str,
+    push_report, call_deepseek, today_str, bjt_hour,
     get_market_indices, get_all_holdings_nav, get_gold_prices,
     get_finance_news, fmt_news, trigger_workflow,
     fmt_pct, fmt_price,
@@ -107,6 +107,12 @@ def build_evening_prompt(indices: dict, holdings_nav: list, gold_data: dict, new
 
 
 def main():
+    # ⏰ 时间窗口检查：只在 16:00-18:00（收盘后）生成晚报
+    hour = bjt_hour()
+    if not (16 <= hour <= 18):
+        print(f"[SKIP] 当前 BJT {hour}:00，不在晚报时段（16-18点），跳过")
+        return
+
     print(f"[{today_str()}] 阿金晚报生成中...")
 
     print("[1/5] 获取收盘数据...")
