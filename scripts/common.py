@@ -532,6 +532,17 @@ def bjt_hour() -> int:
     return datetime.now(BJT).hour
 
 
+def bjt_now():
+    """获取当前北京时间"""
+    BJT = timezone(timedelta(hours=8))
+    return datetime.now(BJT)
+
+
+def is_monday() -> bool:
+    """判断今天是不是周一"""
+    return bjt_now().weekday() == 0
+
+
 if __name__ == "__main__":
     # 测试
     print("=" * 50)
