@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (
-    push_report, call_deepseek, today_str, bjt_hour,
+    push_report, call_deepseek, today_str, bjt_hour, is_monday,
     get_us_markets, get_gold_prices, get_dxy,
     get_finance_news, fmt_news, trigger_workflow,
     fmt_pct, fmt_price,
@@ -41,7 +41,7 @@ SYSTEM_PROMPT = """你是阿金🪙，大哥的分析小弟，风格清亮务实
 
 
 def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: list) -> str:
-    """构建早报 prompt"""
+    """构建早报 prompt（周一自动切换为周末复盘+周前瞻模式）"""
     us_lines = []
     for name, q in us_data.items():
         us_lines.append(f"- {name}: {fmt_price(q.get('price'))} ({fmt_pct(q.get('change_pct'))})")
@@ -51,15 +51,33 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
         gold_lines.append(f"- {v['name']}: {fmt_price(v.get('price'))} ({fmt_pct(v.get('change_pct'))})")
 
     news_text = fmt_news(news_list)
+    
+    # 周一：周末复盘模式
+    if is_monday():
+        headline = f"今天是 {today_str()}（周一）。以下美股和黄金数据为上周五收盘数据，新闻为周末最新消息。请生成周末复盘+本周前瞻，重点说明：①周末重要新闻 ②周五收盘后到周一的情绪变化 ③本周需要关注的关键事件"
+        sections = """
+1. 🌙 **周末复盘** — 周五美股收盘+周末重要新闻+黄金状态
+2. 🥇 **金价技术位** — 当前金价状态 + 本周关键支撑/压力位
+3. 🔴 **本周焦点** — 本周最重要的 3-5 件大事/数据/事件，每条后附 🧠 持仓解读
+4. 📋 **一句话扫一圈** — 全部 6 个持仓方向的快速判断，每条 1 句话
+5. 📅 **本周日程** — 本周重要经济数据/事件/财报发布"""
+    else:
+        headline = f"今天是 {today_str()}，请生成开盘前瞻早报。"
+        sections = """
+1. 🌙 **隔夜海外** — 美股三大指数涨跌 + 美债收益率 + 美元指数 + 原油 + COMEX黄金
+2. 🥇 **金价技术位** — 内外盘金价状态 + 关键支撑/压力位 + RSI判断
+3. 🔴 **今日焦点** — 当日最重要的 3-5 件大事，每条后附 🧠 持仓解读
+4. 📋 **一句话扫一圈** — 全部 6 个持仓方向的快速判断，每条 1 句话
+5. 📅 **今日日程** — 今天的重要经济数据/事件/财报发布"""
 
-    prompt = f"""今天是 {today_str()}，请生成开盘前瞻早报。
+    prompt = f"""{headline}
 
-## 今日财经要闻（附持仓解读）
+## 财经要闻（附持仓解读）
 {news_text}
 
 注意：请结合以上新闻来生成早报，每条重要新闻后标注 🧠 对大哥持仓的影响。
 
-## 隔夜市场数据
+## 市场数据
 
 ### 美股
 {chr(10).join(us_lines) if us_lines else '（数据暂缺）'}
@@ -79,12 +97,7 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 - 易方达云计算ETF联接C 017854 — ~2.0%（试仓，云计算/AI算力）
 
 ## 请严格按照以下板块生成：
-
-1. 🌙 **隔夜海外** — 美股三大指数涨跌 + 美债收益率 + 美元指数 + 原油 + COMEX黄金
-2. 🥇 **金价技术位** — 内外盘金价状态 + 关键支撑/压力位 + RSI判断
-3. 🔴 **今日焦点** — 当日最重要的 3-5 件大事，每条后附 🧠 持仓解读
-4. 📋 **一句话扫一圈** — 全部 6 个持仓方向的快速判断，每条 1 句话
-5. 📅 **今日日程** — 今天的重要经济数据/事件/财报发布
+{sections}
 """
     return prompt
 
