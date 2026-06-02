@@ -52,7 +52,8 @@ def build_evening_prompt(indices: dict, holdings_nav: list, gold_data: dict, new
     holding_lines = []
     for h in holdings_nav:
         name = h.get("display_name", h.get("code"))
-        nav_val = h.get("nav") or h.get("price")
+        # 优先用实时价格/估值（当天数据），其次用最后公布的净值
+        nav_val = h.get("price") or h.get("est_nav") or h.get("nav")
         chg = h.get("change_pct") or h.get("est_change")
         # 标注数据日期
         date_tag = h.get("_stale_days", "")
