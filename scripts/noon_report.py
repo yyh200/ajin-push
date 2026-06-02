@@ -53,7 +53,9 @@ def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict, news_l
         name = h.get("display_name", h.get("code"))
         nav_val = h.get("nav") or h.get("price")
         chg = h.get("change_pct") or h.get("est_change")
-        holding_lines.append(f"- {name}({h['code']}): {fmt_price(nav_val)} ({fmt_pct(chg)})")
+        date_tag = h.get("_stale_days", "")
+        stale_mark = " ⚠️" if h.get("_stale") else ""
+        holding_lines.append(f"- {name}({h['code']}): {fmt_price(nav_val)} ({fmt_pct(chg)}) {date_tag}{stale_mark}")
 
     # 黄金
     gold_lines = []
@@ -62,7 +64,11 @@ def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict, news_l
 
     news_text = fmt_news(news_list)
 
-    prompt = f"""今天是 {today_str()}，请生成午间持仓分析。
+    prompt = f"""今天是 {today_str()}（{today_str()}为报告生成日期）。
+
+【重要规则】以下持仓数据中，每条都标注了"数据日期"。如果某条数据日期不是今天（标记了⚠️），说明该基金净值尚未更新到今天，你必须在报告中明确说明"XX基金使用的是X月X日的数据"，不要假装它是今天的实时数据。
+
+请生成午间持仓分析。
 
 ## 今日财经要闻（附持仓解读）
 {news_text}
@@ -74,7 +80,7 @@ def build_noon_prompt(indices: dict, holdings_nav: list, gold_data: dict, news_l
 ### 大盘指数
 {chr(10).join(index_lines) if index_lines else '（数据暂缺）'}
 
-### 持仓表现
+### 持仓表现（注意：⚠️标记的为非当日最新数据！）
 {chr(10).join(holding_lines) if holding_lines else '（数据暂缺）'}
 
 ### 黄金价格
