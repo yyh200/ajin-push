@@ -72,6 +72,8 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 
     prompt = f"""{headline}
 
+【重要】以下美股数据为上一个交易日（通常为上周五）收盘数据，黄金数据为最近可获取的行情。请在报告中明确标注每条数据的实际日期，不要让用户误以为是今天的实时数据。
+
 ## 财经要闻（附持仓解读）
 {news_text}
 
