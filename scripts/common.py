@@ -408,27 +408,32 @@ def get_all_holdings_nav() -> list:
             nav = get_fund_nav(info["code"])
             nav["display_name"] = name
             # 标注数据新鲜度
-            nav_date = nav.get("date", "")
+            nav_date_raw = nav.get("date", "")
+            nav_date = nav_date_raw.replace("-", "") if nav_date_raw else ""  # 统一格式
             est_nav = nav.get("est_nav")  # 实时估值
             est_change = nav.get("est_change")  # 实时估值涨跌幅
             
             if nav_date and est_nav and est_nav > 0:
-                # 如果净值不是今天的，用实时估值替代
+                # 如果净值日期不是今天，用实时估值替代
                 if nav_date < today_short:
                     nav["price"] = est_nav          # 用实时估值
                     nav["change_pct"] = est_change   # 用实时涨跌幅
                     nav["_stale"] = True
-                    nav["_stale_days"] = f"(实时估值，最新净值日期: {nav_date})"
+                    nav["_stale_days"] = f"(实时估值，最新净值日期: {nav_date_raw})"
                 else:
                     nav["_stale"] = False
                     nav["_stale_days"] = ""
+                    nav["price"] = nav.get("nav")    # 今天的数据，用实际净值
+                    nav["change_pct"] = nav.get("change_pct")
             elif nav_date:
                 if nav_date < today_short:
                     nav["_stale"] = True
-                    nav["_stale_days"] = f"数据日期: {nav_date}（⚠️ 无实时估值）"
+                    nav["_stale_days"] = f"数据日期: {nav_date_raw}（无实时估值）"
                 else:
                     nav["_stale"] = False
                     nav["_stale_days"] = ""
+                    nav["price"] = nav.get("nav")
+                    nav["change_pct"] = nav.get("change_pct")
             results.append(nav)
         elif info["type"] == "etf":
             # ETF 用实时行情
