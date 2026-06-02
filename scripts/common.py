@@ -399,12 +399,23 @@ def get_market_indices() -> dict:
 # 数据获取 · 持仓基金净值批量获取
 # ============================================================
 def get_all_holdings_nav() -> list:
-    """获取所有持仓的最新净值"""
+    """获取所有持仓的最新净值（带数据日期标注）"""
     results = []
+    today = today_str()
     for name, info in HOLDINGS.items():
         if info["type"] == "fund":
             nav = get_fund_nav(info["code"])
             nav["display_name"] = name
+            # 标注数据新鲜度
+            nav_date = nav.get("date", "")
+            if nav_date:
+                # 如果数据日期不是今天也不是昨天，标记为陈旧
+                if nav_date < today.replace("-", "")[:8]:  # 简单比较
+                    nav["_stale"] = True
+                    nav["_stale_days"] = f"数据日期: {nav_date}（⚠️ 非最新）"
+                else:
+                    nav["_stale"] = False
+                    nav["_stale_days"] = f"数据日期: {nav_date}"
             results.append(nav)
         elif info["type"] == "etf":
             # ETF 用实时行情
