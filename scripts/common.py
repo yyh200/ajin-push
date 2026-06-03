@@ -484,20 +484,21 @@ def get_gold_prices() -> dict:
 
     # COMEX 黄金期货
     try:
-        # 通过新浪外盘
         url = "https://hq.sinajs.cn/list=hf_GC"
         headers = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
         resp = requests.get(url, headers=headers, timeout=10)
         resp.encoding = "gbk"
         if "hq_str_hf_GC" in resp.text:
             data = resp.text.split("\"")[1].split(",")
+            # 新浪hf_GC格式: [0]=最新价, [4]=最高, [5]=最低, [7]=昨收, [8]=开盘
+            current = float(data[0]) if data[0] else 0
+            prev_close = float(data[7]) if len(data) > 7 and data[7] else 0
+            change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else 0
             result["comex"] = {
                 "name": "COMEX黄金",
-                "price": float(data[0]) if data[0] else 0,
-                "change_pct": 0,
+                "price": current,
+                "change_pct": change_pct,
             }
-            if len(data) > 2 and data[2]:
-                result["comex"]["change_pct"] = float(data[2])
     except Exception as e:
         print(f"[GOLD] COMEX获取失败: {e}")
 
@@ -508,19 +509,32 @@ def get_gold_prices() -> dict:
 # 数据获取 · 美元指数
 # ============================================================
 def get_dxy() -> Optional[float]:
-    """获取美元指数"""
+    """获取美元指数（多源尝试）"""
+    headers = {"User-Agent": "Mozilla/5.0"}
+    
+    # 源1: Yahoo Finance DX-Y.NYB
     try:
-        url = "https://hq.sinajs.cn/list=hf_XAUUSD"  # 用黄金反向推有点绕
-        # 改用美元指数
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB"
+        params = {"interval": "1d", "range": "2d"}
+        resp = requests.get(url, params=params, headers=headers, timeout=8)
+        data = resp.json()
+        meta = data["chart"]["result"][0]["meta"]
+        return meta["regularMarketPrice"]
+    except:
+        pass
+    
+    # 源2: 新浪 hf_DINIW
+    try:
         url = "https://hq.sinajs.cn/list=hf_DINIW"
-        headers = {"Referer": "https://finance.sina.com.cn", "User-Agent": "Mozilla/5.0"}
-        resp = requests.get(url, headers=headers, timeout=10)
+        resp = requests.get(url, headers={**headers, "Referer": "https://finance.sina.com.cn"}, timeout=8)
         resp.encoding = "gbk"
         if "hq_str_hf_DINIW" in resp.text:
-            data = resp.text.split("\"")[1].split(",")
-            return float(data[0]) if data[0] else None
+            data = resp.text.split("\"")[1]
+            if data:
+                return float(data.split(",")[0])
     except:
-        return None
+        pass
+    
     return None
 
 
