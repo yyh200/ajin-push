@@ -314,16 +314,21 @@ def get_quote(codes: list) -> dict:
     返回: {code: {name, price, change, change_pct, ...}}
     """
     prefix_map = {}
+    reverse_map = {}  # full_code → original_code
     full_codes = []
     for c in codes:
         if c.startswith("sh") or c.startswith("sz") or c.startswith("gb_"):
             full_codes.append(c)
-        elif c.startswith("6") or c.startswith("9"):
+            reverse_map[c] = c.replace("sh", "").replace("sz", "")
+        elif c.startswith("5") or c.startswith("6") or c.startswith("9"):
+            # 5xxxx=上证ETF, 6xxxx=上证股票, 9xxxx=上证B股/科创板
             full_codes.append(f"sh{c}")
             prefix_map[c] = f"sh{c}"
+            reverse_map[f"sh{c}"] = c
         else:
             full_codes.append(f"sz{c}")
             prefix_map[c] = f"sz{c}"
+            reverse_map[f"sz{c}"] = c
 
     url = f"https://hq.sinajs.cn/list={','.join(full_codes)}"
     headers = {
@@ -369,6 +374,10 @@ def get_quote(codes: list) -> dict:
                     "volume": volume,
                     "amount": amount,
                 }
+                # 同时用原始短代码做key，方便调用方查找
+                orig_code = reverse_map.get(raw_code, raw_code)
+                if orig_code != raw_code:
+                    result[orig_code] = result[raw_code]
             except:
                 continue
         return result
