@@ -319,7 +319,7 @@ def get_quote(codes: list) -> dict:
     for c in codes:
         if c.startswith("sh") or c.startswith("sz") or c.startswith("gb_"):
             full_codes.append(c)
-            reverse_map[c] = c.replace("sh", "").replace("sz", "")
+            # 已有前缀的代码不需要reverse_map，调用方会用相同前缀查询
         elif c.startswith("5") or c.startswith("6") or c.startswith("9"):
             # 5xxxx=上证ETF, 6xxxx=上证股票, 9xxxx=上证B股/科创板
             full_codes.append(f"sh{c}")
@@ -351,13 +351,26 @@ def get_quote(codes: list) -> dict:
                 fields = data_part.split(",")
 
                 name = fields[0]
-                open_price = float(fields[1]) if fields[1] else 0
-                prev_close = float(fields[2]) if fields[2] else 0
-                price = float(fields[3]) if fields[3] else 0
-                change = round(price - prev_close, 2)
-                change_pct = round(change / prev_close * 100, 2) if prev_close else 0
-                high = float(fields[4]) if fields[4] else 0
-                low = float(fields[5]) if fields[5] else 0
+                
+                # 美股 (gb_) 字段布局不同 — 用var_part判断, raw_code已被截断
+                if "gb_" in var_part:
+                    # 美股: [0]=名称, [1]=最新价, [2]=涨跌幅(%), [3]=时间, [4]=涨跌额
+                    price = float(fields[1]) if fields[1] else 0
+                    change_pct = float(fields[2]) if fields[2] else 0
+                    change = float(fields[4]) if len(fields) > 4 and fields[4] else 0
+                    open_price = float(fields[5]) if len(fields) > 5 and fields[5] else 0
+                    high = float(fields[6]) if len(fields) > 6 and fields[6] else 0
+                    low = float(fields[7]) if len(fields) > 7 and fields[7] else 0
+                    prev_close = round(price - change, 2) if price and change else 0
+                else:
+                    # A股: [0]=名称, [1]=开盘, [2]=昨收, [3]=最新价, [4]=最高, [5]=最低
+                    open_price = float(fields[1]) if fields[1] else 0
+                    prev_close = float(fields[2]) if fields[2] else 0
+                    price = float(fields[3]) if fields[3] else 0
+                    change = round(price - prev_close, 2)
+                    change_pct = round(change / prev_close * 100, 2) if prev_close else 0
+                    high = float(fields[4]) if fields[4] else 0
+                    low = float(fields[5]) if fields[5] else 0
                 volume = float(fields[8]) if len(fields) > 8 and fields[8] else 0
                 amount = float(fields[9]) if len(fields) > 9 and fields[9] else 0
 
@@ -562,6 +575,9 @@ def fmt_pct(val, with_sign=True):
     """格式化涨跌幅，带颜色标记（文本）"""
     if val is None:
         return "N/A"
+    # 近零处理
+    if abs(val) < 0.005:
+        return "0.00%"
     prefix = "+" if with_sign and val > 0 else ""
     return f"{prefix}{val:.2f}%"
 
