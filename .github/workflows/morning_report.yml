@@ -1,9 +1,9 @@
 name: 阿金早报 08:55
 
 on:
-  schedule:
-    # 每天 08:55 CST = 00:55 UTC
-    - cron: '55 0 * * 1-5'
+  # schedule disabled — replaced by 14:45 portfolio_report
+  # schedule:
+  #   - cron: '55 0 * * 1-5'
   workflow_dispatch:  # 支持手动触发
 
 jobs:
