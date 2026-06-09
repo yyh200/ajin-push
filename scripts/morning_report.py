@@ -105,10 +105,10 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 
 
 def main():
-    # ⏰ 时间窗口检查：只在 7:00-10:00（早盘前）生成早报
+    # ⏰ 时间窗口：7-13点（兼容GitHub schedule延迟）
     hour = bjt_hour()
-    if not (7 <= hour <= 10):
-        print(f"[SKIP] 当前 BJT {hour}:00，不在早报时段（7-10点），跳过")
+    if not (7 <= hour <= 13):
+        print(f"[SKIP] BJT {hour}:00，跳过")
         return
 
     print(f"[{today_str()}] 阿金早报生成中...")
