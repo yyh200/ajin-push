@@ -189,6 +189,25 @@ def trigger_workflow(workflow_name: str) -> bool:
         return False
 
 
+def already_pushed_today(workflow_name: str) -> bool:
+    """检查今天是否已成功推送（防高频cron重复）"""
+    try:
+        url = f"https://api.github.com/repos/yyh200/ajin-push/actions/workflows/{workflow_name}/runs"
+        params = {"status": "success", "per_page": 10}
+        headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        if resp.status_code != 200:
+            return False
+        runs = resp.json().get("workflow_runs", [])
+        today = today_str()
+        for run in runs:
+            if run.get("run_started_at", "").startswith(today):
+                return True
+        return False
+    except:
+        return False
+
+
 # ============================================================
 # DeepSeek · AI 报告生成
 # ============================================================
