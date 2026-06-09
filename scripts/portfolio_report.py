@@ -9,6 +9,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
     push_report, call_deepseek, today_str, bjt_hour, bjt_now, is_monday,
+    already_pushed_today,
     get_market_indices, get_all_holdings_nav, get_gold_prices,
     get_us_markets, get_dxy, get_finance_news, fmt_news,
     fmt_pct, fmt_price, HOLDINGS,
@@ -148,9 +149,12 @@ def build_prompt(indices: dict, holdings_nav: list, gold_data: dict, us_data: di
 # ============================================================
 def main():
     hour = bjt_hour()
-    # 时间窗口：12-18点（兼容GitHub schedule延迟）
     if not (12 <= hour <= 18):
-        print(f"[SKIP] 当前 BJT {hour}:00，不在分析时段（14-15点），跳过")
+        print(f"[SKIP] BJT {hour}:00，跳过")
+        return
+    
+    if already_pushed_today("portfolio_report.yml"):
+        print(f"[SKIP] 持仓分析今天已推送")
         return
 
     print(f"[{today_str()}] 阿金 14:45 持仓分析生成中...")
