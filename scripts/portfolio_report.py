@@ -148,8 +148,8 @@ def build_prompt(indices: dict, holdings_nav: list, gold_data: dict, us_data: di
 # ============================================================
 def main():
     hour = bjt_hour()
-    # 时间窗口：14:00-15:30
-    if not (14 <= hour <= 15):
+    # 时间窗口：12-18点（兼容GitHub schedule延迟）
+    if not (12 <= hour <= 18):
         print(f"[SKIP] 当前 BJT {hour}:00，不在分析时段（14-15点），跳过")
         return
 
