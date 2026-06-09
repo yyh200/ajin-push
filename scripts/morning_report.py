@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (
-    push_report, call_deepseek, today_str, bjt_hour, is_monday,
+    push_report, call_deepseek, today_str, bjt_hour, is_monday, already_pushed_today,
     get_us_markets, get_gold_prices, get_dxy,
     get_finance_news, fmt_news,
     fmt_pct, fmt_price,
@@ -105,10 +105,15 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 
 
 def main():
-    # ⏰ 时间窗口：7-13点（兼容GitHub schedule延迟）
+    # ⏰ 时间窗口：7-13点
     hour = bjt_hour()
     if not (7 <= hour <= 13):
         print(f"[SKIP] BJT {hour}:00，跳过")
+        return
+    
+    # 防重复：今天已推送过就跳过
+    if already_pushed_today("morning_report.yml"):
+        print(f"[SKIP] 早报今天已推送")
         return
 
     print(f"[{today_str()}] 阿金早报生成中...")
