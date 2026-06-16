@@ -1,9 +1,9 @@
 name: 阿金持仓分析 14:45
 
 on:
-  schedule:
-    # 每10分钟，14:00-15:50 BJT（=06:00-07:50 UTC 周一-五）
-    - cron: '*/10 6,7 * * 1-5'
+  # 停用schedule：SCF定时触发为准
+  # schedule:
+  #   - cron: '*/10 6,7 * * 1-5'
   workflow_dispatch:
 
 jobs:
