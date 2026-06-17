@@ -138,6 +138,22 @@ def get_finance_news(max_items: int = 12) -> list:
     except Exception as e:
         print(f"[NEWS] 新浪财经获取失败: {e}")
 
+    # 来源4：新浪财经热门新闻（补充头条级新闻）
+    try:
+        resp = requests.get(
+            "https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2509&knum=8",
+            headers=UA, timeout=8
+        )
+        data = resp.json()
+        for item in data.get("result", {}).get("data", []):
+            title = item.get("title", "").strip()
+            ctime = item.get("ctime", "")
+            if title and title not in seen:
+                seen.add(title)
+                news.append({"title": title, "time": ctime, "source": "新浪热门"})
+    except Exception as e:
+        print(f"[NEWS] 新浪热门获取失败: {e}")
+
     # 去重后按时间排序
     news.sort(key=lambda x: str(x.get("time", 0)), reverse=True)
     return news[:max_items]
