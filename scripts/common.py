@@ -190,10 +190,10 @@ def trigger_workflow(workflow_name: str) -> bool:
 
 
 def already_pushed_today(workflow_name: str) -> bool:
-    """检查今天是否已成功推送（防高频cron重复）"""
+    """检查今天是否已推送或正在推送（防重复）"""
     try:
         url = f"https://api.github.com/repos/yyh200/ajin-push/actions/workflows/{workflow_name}/runs"
-        params = {"status": "success", "per_page": 10}
+        params = {"per_page": 5}
         headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
         resp = requests.get(url, params=params, headers=headers, timeout=10)
         if resp.status_code != 200:
@@ -201,7 +201,10 @@ def already_pushed_today(workflow_name: str) -> bool:
         runs = resp.json().get("workflow_runs", [])
         today = today_str()
         for run in runs:
-            if run.get("run_started_at", "").startswith(today):
+            started = run.get("run_started_at", "")
+            conclusion = run.get("conclusion", "")
+            if started.startswith(today):
+                # Any run today = already pushed or in progress
                 return True
         return False
     except:
