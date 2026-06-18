@@ -206,10 +206,14 @@ def trigger_workflow(workflow_name: str) -> bool:
 
 
 def already_pushed_today(workflow_name: str) -> bool:
-    """检查今天是否已推送或正在推送（防重复）"""
+    """检查今天是否已成功推送（防重复），含随机延迟防竞争条件"""
+    import random, time
+    # 随机延迟0.5-2秒，减少双触发竞争概率
+    time.sleep(random.uniform(0.5, 2.0))
+
     try:
         url = f"https://api.github.com/repos/yyh200/ajin-push/actions/workflows/{workflow_name}/runs"
-        params = {"per_page": 5}
+        params = {"per_page": 10}
         headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
         resp = requests.get(url, params=params, headers=headers, timeout=10)
         if resp.status_code != 200:
@@ -220,8 +224,9 @@ def already_pushed_today(workflow_name: str) -> bool:
             started = run.get("run_started_at", "")
             conclusion = run.get("conclusion", "")
             if started.startswith(today):
-                # Any run today = already pushed or in progress
-                return True
+                # 只认已完成的（success/failure），不认进行中的（防竞争条件）
+                if conclusion in ("success", "failure", "completed"):
+                    return True
         return False
     except:
         return False
