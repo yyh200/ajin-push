@@ -1,7 +1,11 @@
-name: 板块全景扫描 周四15:30
+name: 板块全景扫描 周四14:30
 
 on:
   workflow_dispatch:
+
+concurrency:
+  group: sector-scan
+  cancel-in-progress: false
 
 jobs:
   sector-scan:
