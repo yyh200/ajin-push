@@ -8,7 +8,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
-    push_report, call_deepseek, today_str, bjt_hour, bjt_now, is_monday,
+    push_dual, call_deepseek, today_str, bjt_hour, bjt_now, is_monday,
     already_pushed_today,
     get_market_indices, get_all_holdings_nav, get_gold_prices,
     get_us_markets, get_dxy, get_finance_news, fmt_news,
@@ -189,13 +189,21 @@ def main():
         print("[✗] 分析生成失败")
         return
 
-    # 4. 推送
+    # 4. 双通道推送：微信推摘要 + 邮箱推完整版
     title = f"📊 阿金持仓分析 | {today_str()}"
-    result = push_report(title, report)
+    
+    # 微信版：取前3000字作为摘要，末尾加提示
+    wechat_ver = report[:3000]
+    if len(report) > 3000:
+        wechat_ver += "\n\n📧 完整报告已发送至QQ邮箱，请查收。如未收到，可在聊天记录中查看完整版。"
+    
+    result = push_dual(title, wechat_ver, report)
     if result.get("wechat", False):
-        print(f"[✓] 推送成功")
+        print(f"[✓] 微信推送成功 ({len(wechat_ver)}字)")
     else:
-        print("[✗] 推送失败")
+        print("[✗] 微信推送失败")
+    if result.get("email", False):
+        print(f"[✓] 邮箱推送成功 ({len(report)}字)")
 
 
 if __name__ == "__main__":
