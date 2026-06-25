@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from common import (
-    push_report, call_deepseek, today_str, bjt_hour, is_monday, already_pushed_today,
+    push_dual, call_deepseek, today_str, bjt_hour, is_monday, already_pushed_today,
     get_us_markets, get_gold_prices, get_dxy,
     get_finance_news, fmt_news,
     fmt_pct, fmt_price,
@@ -158,11 +158,17 @@ def main():
             report += f"\n### 美元指数\n- DXY: {fmt_price(dxy)}\n"
         report += "\n*早报完整版将在AI恢复后推送*\n"
 
-    # 3. 推送（微信 + 邮箱）
+    # 3. 双通道推送：微信推摘要 + 邮箱推完整版
     title = f"📊 阿金早报 | {today_str()}"
-    result = push_report(title, report)
+    
+    # 微信版：取前2500字作为摘要
+    wechat_ver = report[:2500]
+    if len(report) > 2500:
+        wechat_ver += "\n\n📧 完整早报已发送至QQ邮箱，请查收。"
+    
+    result = push_dual(title, wechat_ver, report)
     success = result.get("wechat", False)
-
+    
     if success:
         print(f"[✓] 早报推送成功 (微信:{result['wechat']} 邮箱:{result.get('email', False)})")
     else:
