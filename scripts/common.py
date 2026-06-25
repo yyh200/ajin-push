@@ -22,15 +22,16 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 SERVERCHAN_URL = f"https://sctapi.ftqq.com/{SERVERCHAN_KEY}.send"
 
 # ============================================================
-# 持仓常量（与大哥实际持仓同步，2026-05-25 更新）
+# 持仓常量（与大哥实际持仓同步，2026-06-24 更新）
 # ============================================================
 HOLDINGS = {
-    "博时黄金ETF联接C": {"code": "002611", "type": "fund", "weight": 0.55},
-    "南方有色金属ETF": {"code": "512400", "type": "etf", "weight": 0.163},
-    "东方人工智能主题混合C": {"code": "017811", "type": "fund", "weight": 0.055},
-    "华夏电网设备ETF联接C": {"code": "025857", "type": "fund", "weight": 0.083},
-    "前海开源金银珠宝A": {"code": "001302", "type": "fund", "weight": 0.072},
-    "易方达云计算ETF联接C": {"code": "017854", "type": "fund", "weight": 0.02},
+    "博时黄金ETF联接C": {"code": "002611", "type": "fund", "weight": 0.326},
+    "南方有色金属ETF": {"code": "512400", "type": "etf", "weight": 0.130},
+    "东方人工智能主题混合C": {"code": "017811", "type": "fund", "weight": 0.097},
+    "华夏电网设备ETF联接C": {"code": "025857", "type": "fund", "weight": 0.084},
+    "易方达云计算ETF联接C": {"code": "017854", "type": "fund", "weight": 0.082},
+    "南方纳斯达克100QDII C": {"code": "016453", "type": "fund", "weight": 0.021},
+    "华夏人工智能ETF联接C": {"code": "008586", "type": "fund", "weight": 0.018},
 }
 
 # ============================================================
@@ -38,12 +39,16 @@ HOLDINGS = {
 # ============================================================
 def push_to_wechat(title: str, desp: str) -> bool:
     """通过 Server酱 推送到大哥微信"""
+    # Title 最长 128（Server酱限制）
+    if len(title) > 128:
+        title = title[:125] + "..."
+    # Content 不主动截断，Server酱支持 64KB，微信可点"阅读全文"展开
     try:
         data = {"title": title, "desp": desp}
         resp = requests.post(SERVERCHAN_URL, data=data, timeout=20)
         result = resp.json()
         if result.get("code") == 0:
-            print(f"[PUSH] 推送成功: {title[:30]}...")
+            print(f"[PUSH] 推送成功: {title[:30]}... (内容{len(desp)}字符)")
             return True
         else:
             print(f"[PUSH] 推送失败: {result}")
