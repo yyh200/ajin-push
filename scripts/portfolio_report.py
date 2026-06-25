@@ -44,7 +44,8 @@ SYSTEM_PROMPT = """你是阿金🪙，大哥的分析小弟，风格清亮务实
 7. 🔴 数据质量纪律：关键价格数据必须标注来源，日期必须精确，不编造不估算
 8. 🔴 涨跌原因追踪：持仓方向涨跌幅>3%必须单独查原因并写入报告
 9. 🔴 新闻采集优先级：先搜持仓方向相关新闻（半导体/黄金/有色/电网/云计算/纳指/AI），再搜宏观全局
-10. 结尾署名：— 阿金 🪙
+10. 🔴 **推送适配：微信推送有长度限制，请控制总输出在 3000-4000 字以内。精炼但不丢关键数据，每个板块用最简练的表达。每句话都要有价值。**
+11. 结尾署名：— 阿金 🪙
 
 七维诊断 + 双面牛熊 + D7政策日历 + 数据质量纪律 + 涨跌原因追踪 + 确认偏误检查。一个都不准少。"""
 
@@ -185,7 +186,7 @@ def main():
     print("[6/6] 调用 DeepSeek 生成分析...")
     prompt = build_prompt(indices, holdings_nav, gold_data, us_data, dxy, news_list)
 
-    report = call_deepseek(prompt, system_prompt=SYSTEM_PROMPT, max_tokens=3000)
+    report = call_deepseek(prompt, system_prompt=SYSTEM_PROMPT, max_tokens=2000)
     if not report:
         print("[✗] 分析生成失败")
         return
