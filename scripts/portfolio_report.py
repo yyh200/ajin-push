@@ -143,7 +143,7 @@ def build_prompt(indices: dict, holdings_nav: list, gold_data: dict, us_data: di
 - 不可只说利好不说利空
 - 不要因为跌了就盲目喊加仓，也不要因为涨了就喊持有
 - 数据日期必须标注清楚，⚠️ 标记的非今日数据必须特别说明
-- 微信可点"阅读全文"展开全文，不用刻意缩短。"""
+- 推送适配：总输出控制在3000-4000字，精炼但保留所有关键数据。"""
 
     return prompt
 
