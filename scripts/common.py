@@ -61,7 +61,7 @@ def push_to_wechat(title: str, desp: str) -> bool:
 # QQ邮箱 · 推送备份
 # ============================================================
 def push_to_email(subject: str, content: str) -> bool:
-    """通过 QQ 邮箱 SMTP 发送报告作为备份"""
+    """通过 QQ 邮箱 SMTP 发送报告作为备份（HTML格式）"""
     if not QQ_MAIL_AUTH_CODE:
         print("[EMAIL] 未配置 QQ_MAIL_AUTH_CODE，跳过邮件推送")
         return False
@@ -71,7 +71,13 @@ def push_to_email(subject: str, content: str) -> bool:
     from email.header import Header
 
     try:
-        msg = MIMEText(content, "plain", "utf-8")
+        # 用HTML格式发送，更美观
+        html_content = content.replace("\n", "<br>")
+        html_body = f"""<html><body style="font-family:'Microsoft YaHei',sans-serif;padding:20px;color:#333">
+<div style="max-width:800px;margin:auto;background:#fff;border-radius:8px;padding:20px">
+{html_content}
+</div></body></html>"""
+        msg = MIMEText(html_body, "html", "utf-8")
         msg["Subject"] = Header(subject, "utf-8")
         msg["From"] = QQ_MAIL_ADDR
         msg["To"] = QQ_MAIL_ADDR  # 发给自己
