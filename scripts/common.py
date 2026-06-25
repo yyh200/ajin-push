@@ -42,7 +42,11 @@ def push_to_wechat(title: str, desp: str) -> bool:
     # Title 最长 128（Server酱限制）
     if len(title) > 128:
         title = title[:125] + "..."
-    # Content 不主动截断，Server酱支持 64KB，微信可点"阅读全文"展开
+    # ⚠️ 安全截断：Server酱免费版有长度限制，防止内容被静默截断
+    MAX_DESP = 8000
+    if len(desp) > MAX_DESP:
+        print(f"[PUSH] 内容过长({len(desp)} chars)，截断至 {MAX_DESP}")
+        desp = desp[:MAX_DESP] + "\n\n📌 报告过长已压缩，完整版可在聊天窗口查看"
     try:
         data = {"title": title, "desp": desp}
         resp = requests.post(SERVERCHAN_URL, data=data, timeout=20)
