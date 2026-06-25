@@ -183,6 +183,22 @@ def push_report(title: str, content: str) -> dict:
     return {"wechat": wechat_ok, "email": email_ok}
 
 
+def push_dual(title: str, wechat_desp: str, email_desp: str = None) -> dict:
+    """
+    双通道推送：微信推摘要摘要，邮箱推完整版
+    - title: 标题（共用）
+    - wechat_desp: 微信推送的摘要内容（精炼版）
+    - email_desp: 邮箱推送的完整版内容（默认=wechat_desp）
+    """
+    if email_desp is None:
+        email_desp = wechat_desp
+    wechat_ok = push_to_wechat(title, wechat_desp)
+    email_ok = push_to_email(title, email_desp)
+    if email_desp != wechat_desp:
+        print(f"[DUAL] 微信({len(wechat_desp)}字) + 邮箱({len(email_desp)}字)")
+    return {"wechat": wechat_ok, "email": email_ok}
+
+
 # ============================================================
 # 自循环触发 · 解决GitHub Actions调度延迟
 # 每次推送成功后触发下一次，形成链条
