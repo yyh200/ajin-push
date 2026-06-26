@@ -61,36 +61,52 @@ def push_to_wechat(title: str, desp: str) -> bool:
 # QQ邮箱 · 推送备份
 # ============================================================
 def push_to_email(subject: str, content: str) -> bool:
-    """通过 QQ 邮箱 SMTP 发送报告作为备份（HTML格式）"""
+    """通过 QQ 邮箱 SMTP 发送报告作为备份（HTML格式，双端口自动重试）"""
     if not QQ_MAIL_AUTH_CODE:
         print("[EMAIL] 未配置 QQ_MAIL_AUTH_CODE，跳过邮件推送")
         return False
 
     import smtplib
+    import time
     from email.mime.text import MIMEText
     from email.header import Header
 
-    try:
-        # 用HTML格式发送，更美观
-        html_content = content.replace("\n", "<br>")
-        html_body = f"""<html><body style="font-family:'Microsoft YaHei',sans-serif;padding:20px;color:#333">
+    # 构建邮件内容
+    html_content = content.replace("\n", "<br>")
+    html_body = f"""<html><body style="font-family:'Microsoft YaHei',sans-serif;padding:20px;color:#333">
 <div style="max-width:800px;margin:auto;background:#fff;border-radius:8px;padding:20px">
 {html_content}
 </div></body></html>"""
-        msg = MIMEText(html_body, "html", "utf-8")
-        msg["Subject"] = Header(subject, "utf-8")
-        msg["From"] = QQ_MAIL_ADDR
-        msg["To"] = QQ_MAIL_ADDR  # 发给自己
+    msg = MIMEText(html_body, "html", "utf-8")
+    msg["Subject"] = Header(subject, "utf-8")
+    msg["From"] = QQ_MAIL_ADDR
+    msg["To"] = QQ_MAIL_ADDR  # 发给自己
 
-        server = smtplib.SMTP_SSL("smtp.qq.com", 465)
-        server.login(QQ_MAIL_ADDR, QQ_MAIL_AUTH_CODE)
-        server.sendmail(QQ_MAIL_ADDR, [QQ_MAIL_ADDR], msg.as_string())
-        server.quit()
-        print(f"[EMAIL] 邮件推送成功: {subject[:30]}...")
-        return True
-    except Exception as e:
-        print(f"[EMAIL] 邮件推送异常: {e}")
-        return False
+    # 尝试两种端口：465(SSL) 和 587(STARTTLS)，自动重试
+    configs = [
+        {"port": 465, "use_ssl": True,  "desc": "SSL 465"},
+        {"port": 587, "use_ssl": False, "desc": "STARTTLS 587"},
+    ]
+
+    for cfg in configs:
+        try:
+            if cfg["use_ssl"]:
+                server = smtplib.SMTP_SSL("smtp.qq.com", cfg["port"], timeout=15)
+            else:
+                server = smtplib.SMTP("smtp.qq.com", cfg["port"], timeout=15)
+                server.starttls()
+            server.login(QQ_MAIL_ADDR, QQ_MAIL_AUTH_CODE)
+            server.sendmail(QQ_MAIL_ADDR, [QQ_MAIL_ADDR], msg.as_string())
+            server.quit()
+            print(f"[EMAIL] 邮件推送成功 ({cfg['desc']}): {subject[:30]}...")
+            return True
+        except Exception as e:
+            print(f"[EMAIL] {cfg['desc']} 尝试失败: {e}")
+            time.sleep(1)
+            continue
+
+    print("[EMAIL] 所有端口尝试均失败")
+    return False
 
 
 # ============================================================
