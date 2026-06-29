@@ -22,16 +22,16 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 SERVERCHAN_URL = f"https://sctapi.ftqq.com/{SERVERCHAN_KEY}.send"
 
 # ============================================================
-# 持仓常量（与大哥实际持仓同步，2026-06-24 更新）
+# 持仓常量（与大哥实际持仓同步，2026-06-29 更新 — 重大调仓！有色已清/新增5G）
 # ============================================================
 HOLDINGS = {
-    "博时黄金ETF联接C": {"code": "002611", "type": "fund", "weight": 0.326},
-    "南方有色金属ETF": {"code": "512400", "type": "etf", "weight": 0.130},
-    "东方人工智能主题混合C": {"code": "017811", "type": "fund", "weight": 0.097},
-    "华夏电网设备ETF联接C": {"code": "025857", "type": "fund", "weight": 0.084},
-    "易方达云计算ETF联接C": {"code": "017854", "type": "fund", "weight": 0.082},
-    "南方纳斯达克100QDII C": {"code": "016453", "type": "fund", "weight": 0.021},
-    "华夏人工智能ETF联接C": {"code": "008586", "type": "fund", "weight": 0.018},
+    "博时黄金ETF联接C": {"code": "002611", "type": "fund", "weight": 0.332},
+    "东方人工智能主题混合C": {"code": "017811", "type": "fund", "weight": 0.203},
+    "华夏电网设备ETF联接C": {"code": "025857", "type": "fund", "weight": 0.141},
+    "易方达云计算ETF联接C": {"code": "017854", "type": "fund", "weight": 0.078},
+    "华夏人工智能ETF联接C": {"code": "008586", "type": "fund", "weight": 0.045},
+    "华夏中证5G通信ETF联接C": {"code": "008087", "type": "fund", "weight": 0.041},
+    "南方纳斯达克100QDII C": {"code": "016453", "type": "fund", "weight": 0.022},
 }
 
 # ============================================================
