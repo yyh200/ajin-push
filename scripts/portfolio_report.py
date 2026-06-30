@@ -199,11 +199,12 @@ def main():
     # 上传完整报告到GitHub，生成网页链接
     report_url = upload_report_as_html(report, today_str(), "portfolio")
     
-    # 微信版：取前3000字摘要 + 网页链接备份
-    wechat_ver = report[:3000]
+    # 微信版：链接放头部 + 报告摘要
+    wechat_ver = ""
     if report_url:
-        wechat_ver += f"\n\n📖 查看完整报告：{report_url}"
-    elif len(report) > 3000:
+        wechat_ver = f"📖 完整报告：{report_url}\n\n━━━━━━━━━━━━━━━━\n\n"
+    wechat_ver += report[:3000]
+    if not report_url and len(report) > 3000:
         wechat_ver += "\n\n📧 完整报告已发送至QQ邮箱，请查收。如未收到，可在聊天记录中查看完整版。"
     
     result = push_dual(title, wechat_ver, report)
