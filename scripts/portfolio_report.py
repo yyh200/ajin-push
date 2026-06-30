@@ -193,12 +193,17 @@ def main():
         print("[✗] 分析生成失败")
         return
 
-    # 4. 双通道推送：微信推摘要 + 邮箱推完整版
+    # 4. 双通道推送 + 网页版链接
     title = f"📊 阿金持仓分析 | {today_str()}"
     
-    # 微信版：取前3000字作为摘要，末尾加提示
+    # 上传完整报告到GitHub，生成网页链接
+    report_url = upload_report_as_html(report, today_str(), "portfolio")
+    
+    # 微信版：取前3000字作为摘要，末尾加网页链接
     wechat_ver = report[:3000]
-    if len(report) > 3000:
+    if report_url:
+        wechat_ver += f"\n\n📖 查看完整报告：{report_url}"
+    elif len(report) > 3000:
         wechat_ver += "\n\n📧 完整报告已发送至QQ邮箱，请查收。如未收到，可在聊天记录中查看完整版。"
     
     result = push_dual(title, wechat_ver, report)
