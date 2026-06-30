@@ -275,6 +275,71 @@ def already_pushed_today(workflow_name: str) -> bool:
 
 
 # ============================================================
+# 报告网页版 · 上传到GitHub并返回链接
+# ============================================================
+def upload_report_as_html(report_text: str, date_str: str, report_type: str = "daily") -> str:
+    """
+    把报告内容转为HTML，上传到GitHub仓库的reports/目录，
+    返回可访问的网页链接。
+    
+    Args:
+        report_text: 报告内容（Markdown格式）
+        date_str: 日期字符串（如 "2026-06-30"）
+        report_type: 报告类型（daily / portfolio）
+    
+    Returns:
+        网页链接URL，失败返回空字符串
+    """
+    repo = "yyh200/ajin-push"
+    branch = "main"
+    
+    # 拼接成简易HTML
+    safe_text = report_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>阿金报告 {date_str}</title>
+<style>
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+max-width:800px;margin:0 auto;padding:20px;color:#333;line-height:1.7}}
+table{{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}}
+th,td{{border:1px solid #ddd;padding:6px 10px;text-align:center}}
+th{{background:#2c3e50;color:#fff}}
+</style></head>
+<body><pre style="white-space:pre-wrap;font-family:inherit;margin:0">{safe_text}</pre></body></html>"""
+    
+    path = f"reports/{date_str}-{report_type}.html"
+    api_url = f"https://api.github.com/repos/{repo}/contents/{path}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+    }
+    
+    # 检查文件是否已存在（获取SHA）
+    sha = None
+    resp = requests.get(api_url, headers=headers)
+    if resp.status_code == 200:
+        sha = resp.json().get("sha")
+    
+    import base64
+    payload = {
+        "message": f"report: {date_str} {report_type}",
+        "content": base64.b64encode(html.encode("utf-8")).decode("utf-8"),
+        "branch": branch,
+    }
+    if sha:
+        payload["sha"] = sha
+    
+    resp2 = requests.put(api_url, headers=headers, json=payload)
+    if resp2.status_code in (200, 201):
+        url = f"https://github.com/{repo}/blob/{branch}/{path}"
+        print(f"[REPORT] 网页版已上传: {url}")
+        return url
+    else:
+        print(f"[REPORT] 上传失败: {resp2.status_code}")
+        return ""
+
+
+# ============================================================
 # DeepSeek · AI 报告生成
 # ============================================================
 def call_deepseek(prompt: str, system_prompt: str = "",
