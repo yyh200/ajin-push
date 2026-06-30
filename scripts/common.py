@@ -279,7 +279,7 @@ def already_pushed_today(workflow_name: str) -> bool:
 # ============================================================
 def upload_report_as_html(report_text: str, date_str: str, report_type: str = "daily") -> str:
     """
-    把报告内容转为HTML，上传到GitHub仓库的reports/目录，
+    把报告内容转为HTML，上传到GitHub仓库的docs/目录（GitHub Pages默认支持）,
     返回可访问的网页链接。
     
     Args:
@@ -307,7 +307,7 @@ th{{background:#2c3e50;color:#fff}}
 </style></head>
 <body><pre style="white-space:pre-wrap;font-family:inherit;margin:0">{safe_text}</pre></body></html>"""
     
-    path = f"reports/{date_str}-{report_type}.html"
+    path = f"docs/{date_str}-{report_type}.html"
     api_url = f"https://api.github.com/repos/{repo}/contents/{path}"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
