@@ -225,7 +225,7 @@ def push_dual(title: str, wechat_desp: str, email_desp: str = None) -> dict:
 # 自循环触发 · 解决GitHub Actions调度延迟
 # 每次推送成功后触发下一次，形成链条
 # ============================================================
-GITHUB_TOKEN = os.environ.get("GH_TOKEN", "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")
+GITHUB_TOKEN = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN") or "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"
 
 def trigger_workflow(workflow_name: str) -> bool:
     """通过 GitHub API 触发指定 workflow 的 workflow_dispatch"""
