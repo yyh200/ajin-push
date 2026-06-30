@@ -164,12 +164,17 @@ def main():
             report += f"\n### 美元指数\n- DXY: {fmt_price(dxy)}\n"
         report += "\n*早报完整版将在AI恢复后推送*\n"
 
-    # 3. 双通道推送：微信推摘要 + 邮箱推完整版
+    # 3. 上传完整报告 + 双通道推送
     title = f"📊 阿金早报 | {today_str()}"
+    
+    # 上传完整报告到GitHub，生成网页链接
+    report_url = upload_report_as_html(report, today_str(), "morning")
     
     # 微信版：取前2500字作为摘要
     wechat_ver = report[:2500]
-    if len(report) > 2500:
+    if report_url:
+        wechat_ver += f"\n\n📖 查看完整报告：{report_url}"
+    elif len(report) > 2500:
         wechat_ver += "\n\n📧 完整早报已发送至QQ邮箱，请查收。"
     
     result = push_dual(title, wechat_ver, report)
