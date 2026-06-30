@@ -170,10 +170,11 @@ def main():
     # 上传完整报告到GitHub，生成网页链接
     report_url = upload_report_as_html(report, today_str(), "morning")
     
-    # 微信版：取前2500字作为摘要
-    wechat_ver = report[:2500]
+    # 微信版：链接放头部 + 报告摘要
+    wechat_ver = ""
     if report_url:
-        wechat_ver += f"\n\n📖 查看完整报告：{report_url}"
+        wechat_ver = f"📖 完整报告：{report_url}\n\n━━━━━━━━━━━━━━━━\n\n"
+    wechat_ver += report[:2500]
     elif len(report) > 2500:
         wechat_ver += "\n\n📧 完整早报已发送至QQ邮箱，请查收。"
     
