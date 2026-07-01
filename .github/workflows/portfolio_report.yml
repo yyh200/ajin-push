@@ -1,6 +1,8 @@
 name: 阿金持仓分析 14:45
 
 on:
+  schedule:
+    - cron: '45 6 * * 1-5'   # 14:45 BJT = 06:45 UTC, 周一至周五
   workflow_dispatch:
 
 concurrency:
