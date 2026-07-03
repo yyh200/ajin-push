@@ -331,7 +331,7 @@ th{{background:#2c3e50;color:#fff}}
     
     resp2 = requests.put(api_url, headers=headers, json=payload)
     if resp2.status_code in (200, 201):
-        url = f"https://github.com/{repo}/blob/{branch}/{path}"
+        url = f"https://yyh200.github.io/ajin-push/{path.replace(chr(100)+chr(111)+chr(99)+chr(115)+chr(47), chr(47))}"
         print(f"[REPORT] 网页版已上传: {url}")
         return url
     else:
