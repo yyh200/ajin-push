@@ -32,4 +32,5 @@ jobs:
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
           QQ_MAIL_ADDR: ${{ secrets.QQ_MAIL_ADDR }}
           QQ_MAIL_AUTH_CODE: ${{ secrets.QQ_MAIL_AUTH_CODE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: python scripts/morning_report.py
