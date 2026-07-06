@@ -121,7 +121,7 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 def main():
     # ⏰ 时间窗口：7-13点
     hour = bjt_hour()
-    if not (7 <= hour <= 13):
+    if not (7 <= hour <= 15):
         print(f"[SKIP] BJT {hour}:00，跳过")
         return
     
