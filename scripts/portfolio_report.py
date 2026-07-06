@@ -161,7 +161,7 @@ def build_prompt(indices: dict, holdings_nav: list, gold_data: dict, us_data: di
 # ============================================================
 def main():
     hour = bjt_hour()
-    if not (12 <= hour <= 18):
+    if not (12 <= hour <= 22):
         print(f"[SKIP] BJT {hour}:00，跳过")
         return
     
