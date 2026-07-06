@@ -1,8 +1,8 @@
 name: 阿金早报 08:55
 
 on:
-  schedule:
-    - cron: '55 0 * * 1-5'   # 08:55 BJT = 00:55 UTC, 周一至周五
+  # schedule:
+    # - cron: '55 0 * * 1-5'   # 08:55 BJT = 00:55 UTC, 周一至周五
   workflow_dispatch:
 
 # 防重复：同一时间只跑一个实例
