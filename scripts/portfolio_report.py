@@ -9,7 +9,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import (
     push_dual, call_deepseek, today_str, bjt_hour, bjt_now, is_monday,
-    already_pushed_today, upload_report_as_html,
+    already_pushed_today, upload_report_as_html, trigger_workflow,
     get_market_indices, get_all_holdings_nav, get_gold_prices,
     get_us_markets, get_dxy, get_finance_news, fmt_news,
     fmt_pct, fmt_price, HOLDINGS,
@@ -161,7 +161,7 @@ def build_prompt(indices: dict, holdings_nav: list, gold_data: dict, us_data: di
 # ============================================================
 def main():
     hour = bjt_hour()
-    if not (12 <= hour <= 22):
+    if not (12 <= hour <= 18):
         print(f"[SKIP] BJT {hour}:00，跳过")
         return
     
@@ -216,6 +216,8 @@ def main():
     result = push_dual(title, wechat_ver, report)
     if result.get("wechat", False):
         print(f"[✓] 微信推送成功 ({len(wechat_ver)}字)")
+        # 自循环触发：持仓分析成功 → 触发明早早报
+        trigger_workflow("morning_report.yml")
     else:
         print("[✗] 微信推送失败")
     if result.get("email", False):
