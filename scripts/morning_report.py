@@ -12,7 +12,7 @@ from common import (
     push_dual, call_deepseek, today_str, bjt_hour, is_monday, already_pushed_today,
     get_us_markets, get_gold_prices, get_dxy,
     get_finance_news, fmt_news,
-    fmt_pct, fmt_price, upload_report_as_html,
+    fmt_pct, fmt_price, upload_report_as_html, trigger_workflow,
 )
 
 # ============================================================
@@ -121,7 +121,7 @@ def build_morning_prompt(us_data: dict, gold_data: dict, dxy: float, news_list: 
 def main():
     # ⏰ 时间窗口：7-13点
     hour = bjt_hour()
-    if not (7 <= hour <= 15):
+    if not (7 <= hour <= 13):
         print(f"[SKIP] BJT {hour}:00，跳过")
         return
     
@@ -183,6 +183,8 @@ def main():
     
     if success:
         print(f"[✓] 早报推送成功 (微信:{result['wechat']} 邮箱:{result.get('email', False)})")
+        # 自循环触发：早报成功 → 触发持仓分析
+        trigger_workflow("portfolio_report.yml")
     else:
         print("[✗] 早报微信推送失败")
         sys.exit(1)
