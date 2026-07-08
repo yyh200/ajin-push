@@ -183,8 +183,7 @@ def main():
     
     if success:
         print(f"[✓] 早报推送成功 (微信:{result['wechat']} 邮箱:{result.get('email', False)})")
-        # 自循环触发：早报成功 → 触发持仓分析
-        trigger_workflow("portfolio_report.yml")
+        # 不自触发持仓分析（SCF已在14:45触发），避免08:55跳过占位导致14:45被block
     else:
         print("[✗] 早报微信推送失败")
         sys.exit(1)
