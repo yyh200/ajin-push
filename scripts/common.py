@@ -268,6 +268,22 @@ def already_pushed_today(workflow_name: str) -> bool:
             if started.startswith(today):
                 # 只认已完成的（success/failure），不认进行中的（防竞争条件）
                 if conclusion in ("success", "failure", "completed"):
+                    # 🔴 防被"跳过但标success"的假推送block
+                    # 计算运行时长（秒），跳过<20秒的极短运行（真实运行需40秒+）
+                    started_dt = run.get("run_started_at", "")
+                    updated_dt = run.get("updated_at", "")
+                    if started_dt and updated_dt:
+                        from datetime import datetime
+                        try:
+                            fmt = "%Y-%m-%dT%H:%M:%SZ"
+                            s = datetime.strptime(started_dt[:19] + "Z", fmt)
+                            u = datetime.strptime(updated_dt[:19] + "Z", fmt)
+                            duration = (u - s).total_seconds()
+                            if duration < 20:
+                                print(f"[SKIP_DETECT] {workflow_name} 运行仅{duration:.0f}s，判定为跳过，不计数")
+                                continue
+                        except:
+                            pass
                     return True
         return False
     except:
@@ -331,7 +347,7 @@ th{{background:#2c3e50;color:#fff}}
     
     resp2 = requests.put(api_url, headers=headers, json=payload)
     if resp2.status_code in (200, 201):
-        url = f"https://yyh200.github.io/ajin-push/{path.replace('docs/', '')}"
+        url = f"https://github.com/{repo}/blob/{branch}/{path}"
         print(f"[REPORT] 网页版已上传: {url}")
         return url
     else:
