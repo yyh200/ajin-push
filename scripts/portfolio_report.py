@@ -167,7 +167,18 @@ def main():
     
     if already_pushed_today("portfolio_report.yml"):
         print(f"[SKIP] 持仓分析今天已推送")
-        return
+        # 二次确认：检查HTML文件是否真的存在（防止被"跳过但标success"的假推送block）
+        import requests as _req
+        try:
+            _url = f"https://raw.githubusercontent.com/yyh200/ajin-push/main/docs/{today_str()}-portfolio.html"
+            _r = _req.get(_url, timeout=5)
+            if _r.status_code == 200:
+                print(f"[SKIP] 文件已存在，确认跳过")
+                return
+            print(f"[RETRY] 文件不存在({_r.status_code})，强制执行")
+        except:
+            print(f"[RETRY] 检查文件失败，强制执行")
+        # fall through → 继续执行
 
     print(f"[{today_str()}] 阿金 14:45 持仓分析生成中...")
 
